@@ -1,0 +1,7 @@
+numpy
+pandas
+streamlit
+top2vec
+top2vec[sentence_transformers]
+top2vec[sentence_encoders]
+top2vec[indexing]
