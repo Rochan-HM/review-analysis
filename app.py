@@ -5,8 +5,10 @@ import pandas as pd
 
 from top2vec import Top2Vec
 
-st.title("Review Analysis")
+st.set_page_config(layout="wide")
 st.set_option("deprecation.showPyplotGlobalUse", False)
+
+st.title("Review Analysis")
 
 # Step 1: Ask user to upload a CSV file
 st.markdown("## Step 1: Upload a CSV file")
@@ -16,8 +18,14 @@ uploaded_file = st.file_uploader("Choose a CSV file", type="csv")
 if uploaded_file is None:
     st.stop()
 
+try:
+    with st.spinner("Loading data..."):
+        df = helper.read_data_csv(uploaded_file)
+except Exception as e:
+    st.error(e)
+    st.stop()
+
 st.markdown("### Preview of uploaded CSV file")
-df = pd.read_csv(uploaded_file)
 df.dropna(inplace=True)
 st.write(df.head(10))
 

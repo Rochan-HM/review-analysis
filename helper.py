@@ -1,4 +1,5 @@
 import multiprocessing
+import pandas as pd
 
 EMBEDDING_MODEL = """
 `doc2vec` is a neural network-based model for representing documents as fixed-length vectors. It is trained on a dataset of text documents and can be used for tasks such as document similarity comparison and document classification.
@@ -20,3 +21,13 @@ It will determine how fast the model takes to train. The fast-learn option is th
 def get_num_cpu_cores():
     """Get the number of CPU cores."""
     return multiprocessing.cpu_count()
+
+
+def read_data_csv(path):
+    """Read data from a CSV file."""
+    try:
+        return pd.read_csv(path, engine="python")
+    except:
+        raise Exception(
+            "Could not read CSV file. Please check the encoding of the file."
+        )
