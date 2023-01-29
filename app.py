@@ -19,8 +19,7 @@ if uploaded_file is None:
     st.stop()
 
 try:
-    with st.spinner("Loading data..."):
-        df = helper.read_data_csv(uploaded_file)
+    df = helper.read_data_csv(uploaded_file)
 except Exception as e:
     st.error(e)
     st.stop()
