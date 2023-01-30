@@ -33,6 +33,13 @@ st.markdown("## Step 2: Select the column to analyze")
 column_options = df.columns.tolist()
 selected_column = st.selectbox("Select a column", column_options)
 
+# Check if the column is a string column
+valid_column = pd.api.types.is_string_dtype(df[selected_column])
+
+if not valid_column:
+    st.error("Please select a string column")
+    st.stop()
+
 # Step 3: Ask user to select an embedding model
 st.markdown("## Step 3: Select an embedding model")
 with st.expander("What is an embedding model?"):
