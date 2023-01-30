@@ -130,6 +130,21 @@ with topics:
     num_topics = model.get_num_topics()
     st.write(f"Number of topics: {num_topics}")
 
+    # Get the top representative documents for each topic
+    representative_docs = []
+    for topic in range(num_topics):
+        representative_doc, _, _ = model.search_documents_by_topic(topic, num_docs=1)
+        representative_docs.append(representative_doc[0])
+
+    representative_df = pd.DataFrame(
+        {"Topic": range(num_topics), "Representative review": representative_docs}
+    )
+
+    # Show it in an expandable table
+    st.markdown("### Top representative reviews for each topic")
+    st.markdown("This table shows the top representative review for each topic.")
+    st.dataframe(representative_df.set_index("Topic"), use_container_width=True)
+
     # Show a dropdown to select a topic
     topic_options = [f"Topic {i}" for i in range(num_topics)]
     selected_topic = st.selectbox("Select a topic", topic_options)
@@ -171,8 +186,6 @@ with search:
         keywords = [keyword.strip() for keyword in keywords]
     except:
         st.error("Invalid input")
-
-    print(keywords)
 
     if not keywords or not all(keywords):
         st.stop()
