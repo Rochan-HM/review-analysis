@@ -21,7 +21,7 @@ nlp = spacy.load("en_core_web_sm")
 # Make a heading with the logo from https://aialoe.org/wp-content/uploads/2023/01/dark-text-no-tag-cener.jpg
 # and the title "CARES"
 # Everything should be centered
-HEADER = """
+HEADER_HTML = """
 <div style="text-align: center;">
 <img src="https://aialoe.org/wp-content/uploads/2023/01/dark-text-no-tag-cener.jpg" alt="Logo" width="300">
 <h1>CARES</h1>

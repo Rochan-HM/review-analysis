@@ -9,7 +9,7 @@ st.set_page_config(layout="wide")
 st.set_option("deprecation.showPyplotGlobalUse", False)
 
 # Header
-st.markdown(HEADER, unsafe_allow_html=True)
+st.markdown(HEADER_HTML, unsafe_allow_html=True)
 
 # Step 1: Ask user to upload a CSV file
 st.markdown("## Step 1: Upload a CSV file")
