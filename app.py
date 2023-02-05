@@ -149,9 +149,9 @@ with topics:
             representative_documents = []
             for topic in range(num_topics):
                 representative_docs, _, _ = model.search_documents_by_topic(
-                    topic, num_docs=3
+                    topic, num_docs=1
                 )
-                representative_documents.append("\n".join(list(representative_docs)))
+                representative_documents.append(representative_docs[0])
 
             # Extract cluster labels for the documents
             predicted_topic_labels = extract_labels(model)
