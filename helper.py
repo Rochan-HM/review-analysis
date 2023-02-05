@@ -8,8 +8,7 @@ import numpy as np
 
 from collections import Counter
 from nltk.corpus import stopwords
-from nltk import WordNetLemmatizer
-from nltk.stem import PorterStemmer, SnowballStemmer
+from nltk.stem import SnowballStemmer
 
 
 nltk.download("stopwords")
@@ -17,6 +16,18 @@ nltk.download("punkt")
 
 sw = set(stopwords.words("english"))
 nlp = spacy.load("en_core_web_sm")
+
+# Header for the application.
+# Make a heading with the logo from https://aialoe.org/wp-content/uploads/2023/01/dark-text-no-tag-cener.jpg
+# and the title "CARES"
+# Everything should be centered
+HEADER = """
+<div style="text-align: center;">
+<img src="https://aialoe.org/wp-content/uploads/2023/01/dark-text-no-tag-cener.jpg" alt="Logo" width="300">
+<h1>CARES</h1>
+<h2>Classroom Assessment Review and Evaluation System</h2>
+</div>
+""".strip()
 
 EMBEDDING_MODEL_MSG = """
 `doc2vec` is a neural network-based model for representing documents as fixed-length vectors. It is trained on a dataset of text documents and can be used for tasks such as document similarity comparison and document classification.

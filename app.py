@@ -8,7 +8,8 @@ from helper import *
 st.set_page_config(layout="wide")
 st.set_option("deprecation.showPyplotGlobalUse", False)
 
-st.title("Review Analysis")
+# Header
+st.markdown(HEADER, unsafe_allow_html=True)
 
 # Step 1: Ask user to upload a CSV file
 st.markdown("## Step 1: Upload a CSV file")
