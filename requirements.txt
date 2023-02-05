@@ -1,5 +1,6 @@
 numpy
 pandas
+spacy
 streamlit
 top2vec
 top2vec[sentence_transformers]

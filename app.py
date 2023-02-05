@@ -1,9 +1,9 @@
-import helper
 import streamlit as st
 import numpy as np
 import pandas as pd
 
 from top2vec import Top2Vec
+from helper import *
 
 st.set_page_config(layout="wide")
 st.set_option("deprecation.showPyplotGlobalUse", False)
@@ -19,7 +19,7 @@ if uploaded_file is None:
     st.stop()
 
 try:
-    df = helper.read_data_csv(uploaded_file)
+    df = read_data_csv(uploaded_file)
 except Exception as e:
     st.error(e)
     st.stop()
@@ -46,7 +46,7 @@ with st.expander("What is an embedding model?"):
     st.markdown(
         "An embedding model is a way of representing text as a vector of numbers."
     )
-    st.markdown(helper.EMBEDDING_MODEL)
+    st.markdown(EMBEDDING_MODEL_MSG)
 
 embedding_options = [
     "doc2vec",
@@ -66,6 +66,8 @@ if "selected_embedding" not in st.session_state:
 if selected_embedding != st.session_state.selected_embedding:
     # Reset the model
     st.session_state.model = None
+    st.session_state.predicted_topic_labels = None
+    st.session_state.representative_df = None
 
 st.session_state.selected_embedding = selected_embedding
 
@@ -74,7 +76,7 @@ st.session_state.selected_embedding = selected_embedding
 if selected_embedding == "doc2vec":
     st.markdown("### Select a learning speed")
     with st.expander("What is a learning speed?"):
-        st.markdown(helper.SPEED)
+        st.markdown(SPEED_MSG)
 
     speed_options = ["fast-learn", "learn", "deep-learn"]
     selected_speed = st.selectbox("Select a learning speed", speed_options)
@@ -89,6 +91,12 @@ btn = placeholder.button("Start training the model")
 if "model" not in st.session_state:
     st.session_state.model = None
 
+if "predicted_topic_labels" not in st.session_state:
+    st.session_state.predicted_topic_labels = None
+
+if "representative_df" not in st.session_state:
+    st.session_state.representative_df = None
+
 if btn and st.session_state.model is None:
     st.spinner("Training the model...")
     with st.spinner("Training the model..."):
@@ -99,7 +107,7 @@ if btn and st.session_state.model is None:
             model = Top2Vec(
                 documents=df[selected_column].tolist(),
                 speed=selected_speed,
-                workers=helper.get_num_cpu_cores(),
+                workers=get_num_cpu_cores(),
                 embedding_model=selected_embedding,
             )
         else:
@@ -108,7 +116,7 @@ if btn and st.session_state.model is None:
 
             model = Top2Vec(
                 documents=df[selected_column].tolist(),
-                workers=helper.get_num_cpu_cores(),
+                workers=get_num_cpu_cores(),
                 embedding_model=selected_embedding,
             )
 
@@ -128,27 +136,53 @@ topics, search = st.tabs(["Explore by Topics", "Explore by Keywords"])
 with topics:
     st.markdown("### Topics")
     num_topics = model.get_num_topics()
+    num_docs = model.get_topic_sizes()[0]
     st.write(f"Number of topics: {num_topics}")
 
-    # Get the top representative documents for each topic
-    representative_docs = []
-    for topic in range(num_topics):
-        representative_doc, _, _ = model.search_documents_by_topic(topic, num_docs=1)
-        representative_docs.append(representative_doc[0])
+    if (
+        st.session_state.predicted_topic_labels is None
+        and st.session_state.representative_df is None
+    ):
+        with st.spinner("Auto-generating topics..."):
+            # Get the top representative documents for each topic
+            representative_documents = []
+            for topic in range(num_topics):
+                representative_docs, _, _ = model.search_documents_by_topic(
+                    topic, num_docs=3
+                )
+                representative_documents.append("\n".join(list(representative_docs)))
 
-    representative_df = pd.DataFrame(
-        {"Topic": range(num_topics), "Representative review": representative_docs}
-    )
+            # Extract cluster labels for the documents
+            predicted_topic_labels = extract_labels(model)
+
+            representative_df = pd.DataFrame(
+                {
+                    "Topic": range(num_topics),
+                    "Predicted Topic Labels": predicted_topic_labels,
+                    "Top Review": representative_documents,
+                }
+            )
+
+            # Save the results to the session state
+            st.session_state.predicted_topic_labels = predicted_topic_labels
+            st.session_state.representative_df = representative_df
+
+    predicted_topic_labels = st.session_state.predicted_topic_labels
+    representative_df = st.session_state.representative_df
 
     # Show it in an expandable table
-    st.markdown("### Top representative reviews for each topic")
-    st.markdown("This table shows the top representative review for each topic.")
+    st.markdown("### Top reviews for each topic")
+    st.markdown(
+        "This table shows the top review for each topic. However, it might not be the most representative review for the topic."
+    )
     st.dataframe(representative_df.set_index("Topic"), use_container_width=True)
 
     # Show a dropdown to select a topic
-    topic_options = [f"Topic {i}" for i in range(num_topics)]
+    topic_options = [
+        f"Topic {i}: {predicted_topic_labels[i]}" for i in range(num_topics)
+    ]
     selected_topic = st.selectbox("Select a topic", topic_options)
-    topic = int(selected_topic.split(" ")[1])
+    topic = int(selected_topic.split(":")[0].split(" ")[1])
 
     # Show the top 10 words for the selected topic
     st.markdown("### Top 10 words for the selected topic")
@@ -167,7 +201,11 @@ with topics:
     st.markdown("### Select number of reviews to show")
     st.markdown("These are marked in descending order of similarity to the topic.")
     num_docs = st.number_input(
-        "Number of reviews", min_value=1, max_value=1000, value=10, key="num_topic_docs"
+        "Number of reviews",
+        min_value=1,
+        max_value=num_docs[topic],
+        value=10,
+        key="num_topic_docs",
     )
     documents, document_scores, _ = model.search_documents_by_topic(
         topic, num_docs=num_docs
