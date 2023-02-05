@@ -13,6 +13,7 @@ from nltk.stem import PorterStemmer, SnowballStemmer
 
 
 nltk.download("stopwords")
+nltk.download("punkt")
 
 sw = set(stopwords.words("english"))
 nlp = spacy.load("en_core_web_sm")
