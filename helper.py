@@ -5,7 +5,9 @@ import nltk
 
 import pandas as pd
 import numpy as np
+import streamlit as st
 
+from io import BytesIO
 from collections import Counter
 from nltk.corpus import stopwords
 from nltk.stem import SnowballStemmer
@@ -252,3 +254,33 @@ def extract_labels(model):
         labels.append(label)
 
     return labels
+
+
+@st.cache
+def _export_df_to_excel(df: pd.DataFrame):
+    """
+    Export a dataframe to an excel file.
+    """
+
+    output = BytesIO()
+    writer = pd.ExcelWriter(output, engine="xlsxwriter")
+    df.to_excel(writer, sheet_name="Sheet1", index=False)
+    writer.save()
+    processed_data = output.getvalue()
+    return processed_data
+
+
+def display_dataframe(df, key, **kwargs):
+    """
+    Display a dataframe in a nice format.
+    Also provide a download link to the dataframe.
+    """
+
+    st.dataframe(df, use_container_width=True, **kwargs)
+    st.download_button(
+        label="Download Data",
+        data=_export_df_to_excel(df),
+        file_name=f"{key}.xlsx",
+        help="Download the data in the above table as an excel file.",
+        key=f"{key}_download_button",
+    )

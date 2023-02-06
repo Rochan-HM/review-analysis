@@ -27,7 +27,7 @@ except Exception as e:
 
 st.markdown("### Preview of uploaded CSV file")
 df.dropna(inplace=True)
-st.write(df.head(10))
+display_dataframe(df.head(10), key="preview_df")
 
 # Step 2: Ask user to select a column
 st.markdown("## Step 2: Select the column to analyze")
@@ -50,13 +50,13 @@ with st.expander("What is an embedding model?"):
     st.markdown(EMBEDDING_MODEL_MSG)
 
 embedding_options = [
-    "doc2vec",
-    "universal-sentence-encoder",
-    "universal-sentence-encoder-large",
-    "universal-sentence-encoder-multilingual",
-    "universal-sentence-encoder-multilingual-large",
-    "distiluse-base-multilingual-cased",
     "all-MiniLM-L6-v2",
+    "doc2vec",
+    # "universal-sentence-encoder",
+    # "universal-sentence-encoder-large",
+    # "universal-sentence-encoder-multilingual",
+    # "universal-sentence-encoder-multilingual-large",
+    "distiluse-base-multilingual-cased",
     "paraphrase-multilingual-MiniLM-L12-v2",
 ]
 selected_embedding = st.selectbox("Select an embedding model", embedding_options)
@@ -132,7 +132,9 @@ if model is None:
 # Step 5: Analyze the model
 st.markdown("## Step 5: Analyze the model")
 
-topics, search = st.tabs(["Explore by Topics", "Explore by Keywords"])
+topics, kw_search, query_search = st.tabs(
+    ["Explore by Topics", "Explore by Keywords", "Explore by Query"]
+)
 
 with topics:
     st.markdown("### Topics")
@@ -176,7 +178,7 @@ with topics:
     st.markdown(
         "This table shows the top review for each topic. However, it might not be the most representative review for the topic."
     )
-    st.dataframe(representative_df.set_index("Topic"), use_container_width=True)
+    display_dataframe(representative_df.set_index("Topic"), key="representative_df")
 
     # Show a dropdown to select a topic
     topic_options = [
@@ -191,7 +193,7 @@ with topics:
     topic_words = topic_words[topic][:10]
     word_scores = word_scores[topic][:10]
     topics_df = pd.DataFrame({"Word": topic_words, "Score": word_scores})
-    st.table(topics_df)
+    display_dataframe(topics_df, key="topic_words_df")
 
     # Show the word cloud for the selected topic
     st.markdown("### Word cloud for the selected topic")
@@ -212,12 +214,12 @@ with topics:
         topic, num_docs=num_docs
     )
     document_df = pd.DataFrame({"Review": documents, "Score": document_scores})
-    st.table(document_df)
+    display_dataframe(document_df, key="document_df")
 
-with search:
+with kw_search:
     st.markdown("### Keywords")
     st.markdown("Enter a list of keywords separated by commas.")
-    keyword_input = st.text_input("Keyword").strip()
+    keyword_input = st.text_input("Keyword", key="keyword_input").strip()
     keywords = None
 
     try:
@@ -237,10 +239,10 @@ with search:
         min_value=1,
         max_value=1000,
         value=10,
-        key="num_keywords_docs",
+        key="num_keywords_docs_kw",
     )
 
-    search_btn = st.button("Search")
+    search_btn = st.button("Search", key="kw_search_btn")
 
     if not search_btn:
         st.stop()
@@ -252,6 +254,40 @@ with search:
             )
 
             document_df = pd.DataFrame({"Review": documents, "Score": document_scores})
-            st.table(document_df)
+            display_dataframe(document_df, key="keyword_search_df")
     except ValueError:
-        st.error(f"Could not find any documents with keywords: {keywords}")
+        st.error(f"Could not find any documents with keywords: {keywords}", key="error")
+
+with query_search:
+    st.markdown("### Query")
+    st.markdown("Enter a query to search for similar reviews.")
+    query_input = st.text_input("Keyword", key="query_input").strip()
+
+    # Ask user to select a number of reviews to show
+    st.markdown("### Select number of reviews to show")
+    st.markdown("These are marked in descending order of similarity to the topic.")
+    num_docs = st.number_input(
+        "Number of reviews",
+        min_value=1,
+        max_value=1000,
+        value=10,
+        key="num_keywords_docs_query",
+    )
+
+    search_btn = st.button("Search", key="query_search_btn")
+
+    if not search_btn:
+        st.stop()
+
+    try:
+        with st.spinner("Searching..."):
+            documents, document_scores, _ = model.query_documents(
+                query_input, num_docs=num_docs
+            )
+
+            document_df = pd.DataFrame({"Review": documents, "Score": document_scores})
+            display_dataframe(document_df, key="query_search_df")
+    except ValueError:
+        st.error(
+            f"Could not find any documents with query: {query_input}", key="query_error"
+        )
