@@ -2,7 +2,7 @@
 
 FROM python:3.9-slim
 
-ARG PORT=8501
+ENV PORT=8081
 
 WORKDIR /app
 
