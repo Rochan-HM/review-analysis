@@ -2,8 +2,6 @@
 
 FROM python:3.9-slim
 
-ENV PORT=8081
-
 WORKDIR /app
 
 RUN apt-get update && apt-get install -y \
@@ -20,6 +18,8 @@ RUN pip3 install -r requirements.txt
 RUN python3 -m spacy download en_core_web_sm
 
 COPY . .
+
+ENV PORT=8081
 
 HEALTHCHECK CMD curl --fail http://localhost:${PORT}/_stcore/health
 
