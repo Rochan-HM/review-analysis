@@ -132,8 +132,11 @@ if model is None:
 # Step 5: Analyze the model
 st.markdown("## Step 5: Analyze the model")
 
-topics, kw_search, query_search = st.tabs(
-    ["Explore by Topics", "Explore by Keywords", "Explore by Query"]
+topics, kw_search = st.tabs(
+    [
+        "Explore by Topics",
+        "Explore by Keywords / Phrases",
+    ]
 )
 
 with topics:
@@ -217,14 +220,27 @@ with topics:
     display_dataframe(document_df, key="document_df")
 
 with kw_search:
-    st.markdown("### Keywords")
-    st.markdown("Enter a list of keywords separated by commas.")
-    keyword_input = st.text_input("Keyword", key="keyword_input").strip()
+    st.markdown("### Keywords / Phrases Search")
+    mode = st.radio(
+        "Search mode",
+        ["Keywords", "Phrases"],
+        key="mode",
+    )
+
+    if mode == "Keywords":
+        st.markdown("### Enter keywords separated by commas (e.g. `good, bad, ugly`)")
+    else:
+        st.markdown("### Enter a phrase (e.g. `good but bad`)")
+
+    keyword_input = st.text_input("Keyword / Phrase", key="keyword_input").strip()
     keywords = None
 
     try:
-        keywords = keyword_input.split(",")
-        keywords = [keyword.strip() for keyword in keywords]
+        if mode == "Keywords":
+            keywords = keyword_input.split(",")
+            keywords = [keyword.strip() for keyword in keywords]
+        else:
+            keywords = keyword_input
     except:
         st.error("Invalid input")
 
@@ -232,6 +248,13 @@ with kw_search:
         st.stop()
 
     # Ask user to select a number of reviews to show
+    if mode == "Keywords":
+        st.markdown(
+            f"Searching for reviews containing the keywords {', '.join([f'`{keyword}`' for keyword in keywords])}"
+        )
+    else:
+        st.markdown(f"Searching for reviews containing phrases similar to `{keywords}`")
+
     st.markdown("### Select number of reviews to show")
     st.markdown("These are marked in descending order of similarity to the topic.")
     num_docs = st.number_input(
@@ -242,52 +265,24 @@ with kw_search:
         key="num_keywords_docs_kw",
     )
 
-    search_btn = st.button("Search", key="kw_search_btn")
+    search_btn = st.button("Search", key="search_btn")
 
     if not search_btn:
         st.stop()
 
     try:
         with st.spinner("Searching..."):
-            documents, document_scores, _ = model.search_documents_by_keywords(
-                keywords, num_docs=num_docs
-            )
+            if mode == "Keywords":
+                documents, document_scores, _ = model.search_documents_by_keywords(
+                    keywords, num_docs=num_docs
+                )
+
+            else:
+                documents, document_scores, _ = model.query_documents(
+                    keywords, num_docs=num_docs
+                )
 
             document_df = pd.DataFrame({"Review": documents, "Score": document_scores})
             display_dataframe(document_df, key="keyword_search_df")
-    except ValueError:
-        st.error(f"Could not find any documents with keywords: {keywords}", key="error")
-
-with query_search:
-    st.markdown("### Query")
-    st.markdown("Enter a query to search for similar reviews.")
-    query_input = st.text_input("Keyword", key="query_input").strip()
-
-    # Ask user to select a number of reviews to show
-    st.markdown("### Select number of reviews to show")
-    st.markdown("These are marked in descending order of similarity to the topic.")
-    num_docs = st.number_input(
-        "Number of reviews",
-        min_value=1,
-        max_value=1000,
-        value=10,
-        key="num_keywords_docs_query",
-    )
-
-    search_btn = st.button("Search", key="query_search_btn")
-
-    if not search_btn:
-        st.stop()
-
-    try:
-        with st.spinner("Searching..."):
-            documents, document_scores, _ = model.query_documents(
-                query_input, num_docs=num_docs
-            )
-
-            document_df = pd.DataFrame({"Review": documents, "Score": document_scores})
-            display_dataframe(document_df, key="query_search_df")
-    except ValueError:
-        st.error(
-            f"Could not find any documents with query: {query_input}", key="query_error"
-        )
+    except:
+        st.error(f"Could not find any documents with keywords: {keywords}")
