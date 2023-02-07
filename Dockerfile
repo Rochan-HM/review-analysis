@@ -15,12 +15,10 @@ COPY requirements.txt .
 
 RUN pip3 install -r requirements.txt
 
-RUN python3 -m spacy download en_core_web_sm
-
 COPY . .
 
-ENV PORT=8081
+ARG PORT=8501
 
 HEALTHCHECK CMD curl --fail http://localhost:${PORT}/_stcore/health
 
-ENTRYPOINT ["streamlit", "run", "app.py", "--server.port=${PORT}", "--server.address=0.0.0.0"]
+ENTRYPOINT ["streamlit", "run", "app.py", "--server.port", "${PORT}", "--server.address=0.0.0.0"]
