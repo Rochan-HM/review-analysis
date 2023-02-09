@@ -12,6 +12,9 @@ from .search import main as search
 
 
 def main(df: pd.DataFrame, model: Top2Vec, selected_column: str) -> None:
+    # Step 5: Analyze the model
+    st.markdown("## Step 5: Analyze the model")
+
     num_topics = model.get_num_topics()
     st.write(f"Number of topics: {num_topics}")
 
@@ -37,24 +40,10 @@ def main(df: pd.DataFrame, model: Top2Vec, selected_column: str) -> None:
             # Extract cluster labels for the documents
             predicted_topic_labels = extract_labels(model)
 
-        with st.spinner("Analyzing sentiment..."):
-            sentiment_analysis = get_sentiment_df(df, selected_column)
-
-        print(len(sentiment_analysis), num_topics)
-        print(num_topics - len(sentiment_analysis))
-
-        if len(sentiment_analysis) < num_topics:
-            sentiment_analysis = sentiment_analysis + [""] * (
-                num_topics - len(sentiment_analysis)
-            )
-        else:
-            sentiment_analysis = sentiment_analysis[:num_topics]
-
         representative_df = pd.DataFrame(
             {
                 "Topic": range(num_topics),
                 "Predicted Topic Labels": predicted_topic_labels,
-                "Predicted Sentiment": sentiment_analysis,
                 "Top Review": representative_documents,
             }
         )
@@ -65,22 +54,27 @@ def main(df: pd.DataFrame, model: Top2Vec, selected_column: str) -> None:
 
     predicted_topic_labels = st.session_state.predicted_topic_labels
     representative_df = st.session_state.representative_df
+    df = st.session_state.df
+
+    # Construct a pie chart to show the sentiment distribution
+    st.markdown("### Overall Sentiment Distribution")
+    fig = px.pie(
+        df,
+        names="Predicted Sentiment",
+        title="Overall Sentiment Distribution",
+    )
+    st.plotly_chart(fig)
 
     # Show it in an expandable table
     st.markdown("### Top reviews for each topic")
     st.markdown(
         "This table shows the top review for each topic. However, it might not be the most representative review for the topic."
     )
-    display_dataframe(representative_df.set_index("Topic"), key="representative_df")
 
-    # Construct a pie chart to show the sentiment distribution
-    st.markdown("### Overall Sentiment Distribution")
-    fig = px.pie(
-        representative_df,
-        names="Predicted Sentiment",
-        title="Overall Sentiment Distribution",
+    display_dataframe(
+        representative_df.set_index("Topic"),
+        key="representative_df",
     )
-    st.plotly_chart(fig)
 
     topics_tab, search_tab = layout()
 
