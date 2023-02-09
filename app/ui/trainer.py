@@ -22,8 +22,12 @@ def main(
     st.markdown("## Step 4: Train the model")
     st.markdown("This may take a few minutes...")
 
-    placeholder = st.empty()
-    btn = placeholder.button("Start training the model")
+    checkbox_placeholder = st.empty()
+    btn_placeholder = st.empty()
+    sentiment_checkbox = checkbox_placeholder.checkbox(
+        "Perform sentiment analysis (This may take a long time depending on the size of the dataset.)"
+    )
+    btn = btn_placeholder.button("Start training the model")
 
     if "model" not in st.session_state:
         st.session_state.model = None
@@ -41,10 +45,11 @@ def main(
     ):
         st.spinner("Training the model...")
         with st.spinner("Training the model..."):
-            if selected_embedding == "doc2vec":
-                # Hide the button
-                placeholder.empty()
+            # Hide the buttons
+            btn_placeholder.empty()
+            checkbox_placeholder.empty()
 
+            if selected_embedding == "doc2vec":
                 model = Top2Vec(
                     documents=df[selected_column].tolist(),
                     speed=selected_speed,
@@ -52,9 +57,6 @@ def main(
                     embedding_model=selected_embedding,
                 )
             else:
-                # Hide the button
-                placeholder.empty()
-
                 model = Top2Vec(
                     documents=df[selected_column].tolist(),
                     workers=get_num_cpu_cores(),
@@ -63,31 +65,33 @@ def main(
 
         num_topics = model.get_num_topics()
 
-        with st.spinner("Analyzing sentiment..."):
-            sentiment_analysis = []
-            for chunk in stqdm(np.array_split(df[selected_column], 10)):
-                chunk_df = pd.DataFrame(chunk, columns=[selected_column])
-                sentiment_analysis += get_sentiment_df(chunk_df, selected_column)
+        if sentiment_checkbox:
+            with st.spinner("Analyzing sentiment..."):
+                sentiment_analysis = []
+                for chunk in stqdm(np.array_split(df[selected_column], 10)):
+                    chunk_df = pd.DataFrame(chunk, columns=[selected_column])
+                    sentiment_analysis += get_sentiment_df(chunk_df, selected_column)
 
-        col_name = "Predicted Sentiment"
-        df = df.assign(**{col_name: sentiment_analysis})
+            col_name = "Predicted Sentiment"
+            df = df.assign(**{col_name: sentiment_analysis})
 
-        if len(sentiment_analysis) < num_topics:
-            sentiment_analysis = sentiment_analysis + [""] * (
-                num_topics - len(sentiment_analysis)
-            )
-        else:
-            sentiment_analysis = sentiment_analysis[:num_topics]
+            if len(sentiment_analysis) < num_topics:
+                sentiment_analysis = sentiment_analysis + [""] * (
+                    num_topics - len(sentiment_analysis)
+                )
+            else:
+                sentiment_analysis = sentiment_analysis[:num_topics]
+
+            st.session_state.sentiment_analysis = sentiment_analysis
 
         st.session_state.model = model
-        st.session_state.sentiment_analysis = sentiment_analysis
         st.session_state.df = df
         st.success("Model trained!")
 
     model = st.session_state.model
     sentiment_analysis = st.session_state.sentiment_analysis
 
-    if model is None or sentiment_analysis is None:
+    if model is None:
         st.stop()
 
     return model, df

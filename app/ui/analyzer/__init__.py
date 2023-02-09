@@ -56,14 +56,16 @@ def main(df: pd.DataFrame, model: Top2Vec, selected_column: str) -> None:
     representative_df = st.session_state.representative_df
     df = st.session_state.df
 
-    # Construct a pie chart to show the sentiment distribution
-    st.markdown("### Overall Sentiment Distribution")
-    fig = px.pie(
-        df,
-        names="Predicted Sentiment",
-        title="Overall Sentiment Distribution",
-    )
-    st.plotly_chart(fig, use_container_width=True)
+    # Check if sentiment analysis is enabled
+    if st.session_state.sentiment_analysis is not None:
+        # Construct a pie chart to show the sentiment distribution
+        st.markdown("### Overall Sentiment Distribution")
+        fig = px.pie(
+            df,
+            names="Predicted Sentiment",
+            title="Overall Sentiment Distribution",
+        )
+        st.plotly_chart(fig, use_container_width=True)
 
     # Show it in an expandable table
     st.markdown("### Top reviews for each topic")

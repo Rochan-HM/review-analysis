@@ -39,19 +39,21 @@ def main(
     fig = model.generate_topic_wordcloud(topic)
     st.pyplot(fig=fig)
 
-    # Show the sentiment distribution for the selected topic
-    st.markdown("### Sentiment Distribution for the selected topic")
+    # Check if sentiment analysis is enabled
+    if st.session_state.sentiment_analysis is not None:
+        # Show the sentiment distribution for the selected topic
+        st.markdown("### Sentiment Distribution for the selected topic")
 
-    # Go through all the documents in the selected topic
-    _, _, doc_ids = model.search_documents_by_topic(topic, num_docs=num_docs[topic])
-    sentiments = [df.iloc[doc_id]["Predicted Sentiment"] for doc_id in doc_ids]
+        # Go through all the documents in the selected topic
+        _, _, doc_ids = model.search_documents_by_topic(topic, num_docs=num_docs[topic])
+        sentiments = [df.iloc[doc_id]["Predicted Sentiment"] for doc_id in doc_ids]
 
-    fig = px.pie(
-        pd.DataFrame({"Predicted Sentiment": sentiments}),
-        names="Predicted Sentiment",
-        title="Sentiment Distribution for the selected topic",
-    )
-    st.plotly_chart(fig, use_container_width=True)
+        fig = px.pie(
+            pd.DataFrame({"Predicted Sentiment": sentiments}),
+            names="Predicted Sentiment",
+            title="Sentiment Distribution for the selected topic",
+        )
+        st.plotly_chart(fig, use_container_width=True)
 
     # Ask user to select a number of reviews to show
     st.markdown("### Select number of reviews to show")
