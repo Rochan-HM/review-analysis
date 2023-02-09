@@ -1,6 +1,6 @@
 import streamlit as st
 
-from app.helper import *
+from helper import *
 
 # Header for the application.
 HEADER_HTML = """

@@ -2,7 +2,7 @@ import streamlit as st
 
 from typing import Tuple
 
-from app.helper import *
+from helper import *
 
 EMBEDDING_MODEL_MSG = """
 `doc2vec` is a neural network-based model for representing documents as fixed-length vectors. It is trained on a dataset of text documents and can be used for tasks such as document similarity comparison and document classification.

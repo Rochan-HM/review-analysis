@@ -5,7 +5,7 @@ import plotly.express as px
 from top2vec import Top2Vec
 from typing import List
 
-from app.helper import *
+from helper import *
 
 
 def main(

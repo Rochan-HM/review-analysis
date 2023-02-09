@@ -3,7 +3,7 @@ import pandas as pd
 
 from typing import Tuple
 
-from app.helper import *
+from helper import *
 
 
 def main() -> Tuple[pd.DataFrame, str]:

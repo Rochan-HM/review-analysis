@@ -3,7 +3,7 @@ import pandas as pd
 
 from top2vec import Top2Vec
 
-from app.helper import *
+from helper import *
 
 
 def main(df: pd.DataFrame, model: Top2Vec) -> None:

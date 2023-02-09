@@ -5,10 +5,10 @@ import plotly.express as px
 from top2vec import Top2Vec
 from stqdm import stqdm
 
-from app.helper import *
-from app.ui.analyzer.layout import main as layout
-from app.ui.analyzer.topics import main as topics
-from app.ui.analyzer.search import main as search
+from helper import *
+from .layout import main as layout
+from .topics import main as topics
+from .search import main as search
 
 
 def main(df: pd.DataFrame, model: Top2Vec, selected_column: str) -> None:

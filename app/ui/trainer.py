@@ -4,7 +4,7 @@ import pandas as pd
 from top2vec import Top2Vec
 from stqdm import stqdm
 
-from app.helper import *
+from helper import *
 
 stqdm.pandas()
 
