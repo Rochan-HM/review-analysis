@@ -11,6 +11,14 @@ from io import BytesIO
 from collections import Counter
 from nltk.corpus import stopwords
 from nltk.stem import SnowballStemmer
+from scipy.special import softmax
+from transformers import (
+    AutoModelForSequenceClassification,
+    TFAutoModelForSequenceClassification,
+    AutoTokenizer,
+    pipeline,
+    AutoConfig,
+)
 
 
 nltk.download("stopwords")
@@ -18,36 +26,10 @@ nltk.download("punkt")
 
 sw = set(stopwords.words("english"))
 nlp = spacy.load("en_core_web_sm")
-
-# Header for the application.
-# Make a heading with the logo from https://aialoe.org/wp-content/uploads/2023/01/dark-text-no-tag-cener.jpg
-# and the title "CARES"
-# Everything should be centered
-HEADER_HTML = """
-<div style="text-align: center;">
-<img src="https://aialoe.org/wp-content/uploads/2023/01/dark-text-no-tag-cener.jpg" alt="Logo" width="300">
-<h1>CARES</h1>
-<h2>Classroom Assessment Review and Evaluation System</h2>
-</div>
-""".strip()
-
-EMBEDDING_MODEL_MSG = """
-`doc2vec` is a neural network-based model for representing documents as fixed-length vectors. It is trained on a dataset of text documents and can be used for tasks such as document similarity comparison and document classification.
-
-The `universal-sentence-encoder` and its variants (`universal-sentence-encoder-large`, `universal-sentence-encoder-multilingual`, `universal-sentence-encoder-multilingual-large`) are models that generate embeddings for individual sentences or short paragraphs. These embeddings can be used for tasks such as semantic similarity comparison, text classification, and machine translation. The main difference between these models is their size and the language they are trained on. For example, `universal-sentence-encoder-multilingual` is trained on a diverse set of languages, while `universal-sentence-encoder-large` is a larger version of the model with more parameters.
-
-`distiluse-base-multilingual-cased` is a smaller, faster version of the `universal-sentence-encoder-multilingual` model. This distill version has similar performance with the original version with less computation required.
-
-`all-MiniLM-L6-v2` and `paraphrase-multilingual-MiniLM-L12-v2` are both variants of MiniLM models, which are small language models that can be fine-tuned for a wide range of natural language understanding tasks. The main difference between these two models is the size of the model and the tasks they are trained on. The `all-MiniLM-L6-v2` is a smaller model, while the `paraphrase-multilingual-MiniLM-L12-v2` is larger, and specifically trained on paraphrase identification tasks.
-""".strip()
-
-SPEED_MSG = """
-This parameter is only used when using `doc2vec` as embedding_model.
-
-It will determine how fast the model takes to train. The fast-learn option is the fastest and will generate the lowest quality vectors. The learn option will learn better quality vectors but take a longer time to train. The deep-learn option will learn the best quality vectors but will take significant time to train. 
-""".strip()
+sentiment_model = f"cardiffnlp/twitter-roberta-base-sentiment-latest"
 
 
+@st.cache
 def get_num_cpu_cores():
     """Get the number of CPU cores."""
     return multiprocessing.cpu_count()
@@ -284,3 +266,35 @@ def display_dataframe(df, key, **kwargs):
         help="Download the data in the above table as an excel file.",
         key=f"{key}_download_button",
     )
+
+
+def get_sentiment(text):
+    """
+    Get the sentiment of a text.
+    """
+    tokenizer = AutoTokenizer.from_pretrained(sentiment_model)
+    config = AutoConfig.from_pretrained(sentiment_model)
+
+    model = AutoModelForSequenceClassification.from_pretrained(sentiment_model)
+
+    inp_text = tokenizer(text, return_tensors="pt")
+    output = model(**inp_text)
+    scores = output[0][0].detach().numpy()
+    scores = softmax(scores)
+
+    sentiment = np.argmax(scores)
+    label = config.id2label[sentiment]
+
+    return label
+
+
+def get_sentiment_df(df, text_col):
+    """
+    Get the sentiment of a dataframe.
+    """
+    task = pipeline(
+        "sentiment-analysis", model=sentiment_model, tokenizer=sentiment_model
+    )
+    output = task(df[text_col].tolist())
+
+    return [x["label"] for x in output]

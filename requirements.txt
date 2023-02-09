@@ -2,6 +2,8 @@ numpy
 pandas
 xlsxwriter
 streamlit
+plotly-express
+stqdm
 top2vec
 top2vec[sentence_transformers]
 top2vec[sentence_encoders]
