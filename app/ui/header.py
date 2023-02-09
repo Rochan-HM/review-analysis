@@ -12,7 +12,6 @@ HEADER_HTML = """
 """.strip()
 
 
-@st.cache(suppress_st_warning=True)
 def main() -> None:
     # Header
     st.markdown(HEADER_HTML, unsafe_allow_html=True)
