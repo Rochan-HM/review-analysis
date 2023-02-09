@@ -63,7 +63,7 @@ def main(df: pd.DataFrame, model: Top2Vec, selected_column: str) -> None:
         names="Predicted Sentiment",
         title="Overall Sentiment Distribution",
     )
-    st.plotly_chart(fig)
+    st.plotly_chart(fig, use_container_width=True)
 
     # Show it in an expandable table
     st.markdown("### Top reviews for each topic")

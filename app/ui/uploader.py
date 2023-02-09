@@ -13,6 +13,7 @@ def main() -> Tuple[pd.DataFrame, str]:
 
     # Preview the uploaded CSV file
     if uploaded_file is None:
+        st.session_state.clear()
         st.stop()
 
     try:
