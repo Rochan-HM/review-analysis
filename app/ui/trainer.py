@@ -67,10 +67,11 @@ def main(
 
         if sentiment_checkbox:
             with st.spinner("Analyzing sentiment..."):
-                sentiment_analysis = []
-                for chunk in stqdm(np.array_split(df[selected_column], 10)):
-                    chunk_df = pd.DataFrame(chunk, columns=[selected_column])
-                    sentiment_analysis += get_sentiment_df(chunk_df, selected_column)
+                sentiment_analysis = get_sentiment_df(df, selected_column)
+                # sentiment_analysis = []
+                # for chunk in stqdm(np.array_split(df[selected_column], 10)):
+                #     chunk_df = pd.DataFrame(chunk, columns=[selected_column])
+                #     sentiment_analysis += get_sentiment_df(chunk_df, selected_column)
 
             col_name = "Predicted Sentiment"
             df = df.assign(**{col_name: sentiment_analysis})

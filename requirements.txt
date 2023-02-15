@@ -3,6 +3,7 @@ pandas
 xlsxwriter
 streamlit
 plotly-express
+flair
 stqdm
 top2vec
 top2vec[sentence_transformers]

@@ -8,6 +8,7 @@ import numpy as np
 import streamlit as st
 
 from io import BytesIO
+from stqdm import stqdm
 from collections import Counter
 from nltk.corpus import stopwords
 from nltk.stem import SnowballStemmer
@@ -19,7 +20,11 @@ from transformers import (
     pipeline,
     AutoConfig,
 )
+from flair.data import Sentence
+from flair.models import TextClassifier
 
+
+stqdm.pandas()
 
 nltk.download("stopwords")
 nltk.download("punkt")
@@ -27,6 +32,7 @@ nltk.download("punkt")
 sw = set(stopwords.words("english"))
 nlp = spacy.load("en_core_web_sm")
 sentiment_model = f"cardiffnlp/twitter-roberta-base-sentiment-latest"
+classifier = TextClassifier.load("en-sentiment")
 
 
 @st.cache
@@ -288,7 +294,7 @@ def get_sentiment(text):
     return label
 
 
-def get_sentiment_df(df, text_col):
+def get_sentiment_df2(df, text_col):
     """
     Get the sentiment of a dataframe.
     """
@@ -298,3 +304,19 @@ def get_sentiment_df(df, text_col):
     output = task(df[text_col].tolist())
 
     return [x["label"] for x in output]
+
+
+def _predict_sentiment(text):
+    """
+    Get the sentiment of a text.
+    """
+    sentence = Sentence(text)
+    classifier.predict(sentence)
+    return sentence.labels[0].value.title()
+
+
+def get_sentiment_df(df, text_col):
+    """
+    Get the sentiment of a dataframe.
+    """
+    return df[text_col].progress_apply(_predict_sentiment)
