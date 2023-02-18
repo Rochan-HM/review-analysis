@@ -23,7 +23,7 @@ from transformers import (
 from flair.data import Sentence
 from flair.models import TextClassifier
 
-from labelling.extract_cluster_labels import main as extract_cluster_labels
+from labelling.extract_cluster_labels import api as extract_cluster_labels
 
 
 stqdm.pandas()
@@ -107,23 +107,21 @@ def extract_labels(model):
     num_topics = model.get_num_topics()
     num_docs = model.get_topic_sizes()[0]
 
-    labels = []
+    input_sentences = []
 
     for i in stqdm(range(num_topics)):
         topic_docs, _, _ = model.search_documents_by_topic(
             i, num_docs=min(num_docs[i], 10)
         )
         topic_docs = list(set([t.lower().strip() for t in topic_docs]))
-        if len(topic_docs) == 1:
-            labels.append(topic_docs[0])
-            continue
 
         top_sentences_concat = " ".join(topic_docs)
         top_sentences_concat = _apply_preprocessing_text(top_sentences_concat)
-        label = extract_cluster_labels(top_sentences_concat)
-        labels.append(label)
+        input_sentences.append(top_sentences_concat)
 
-    return [l.title() for l in labels]
+    cluster_labels = extract_cluster_labels(input_sentences)
+
+    return cluster_labels
 
 
 @st.cache_data
