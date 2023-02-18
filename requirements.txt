@@ -1,7 +1,7 @@
 numpy
 nltk
 requests
-dotenv
+python-dotenv
 pandas
 xlsxwriter
 streamlit
