@@ -23,7 +23,7 @@ from transformers import (
 from flair.data import Sentence
 from flair.models import TextClassifier
 
-from app.labelling.extract_cluster_labels import main as extract_cluster_labels
+from .labelling.extract_cluster_labels import main as extract_cluster_labels
 
 
 stqdm.pandas()
