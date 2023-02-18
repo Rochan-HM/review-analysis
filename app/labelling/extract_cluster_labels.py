@@ -23,11 +23,13 @@ def _generate(text: str) -> str:
 
 
 def main(texts: List[str]) -> str:
+    print("Using local model")
     return [_generate(text) for text in texts]
 
 
 def api(texts: List[str]) -> str:
     try:
+        print("Using API")
         headers = {"Authorization": f"Bearer {API_KEY}"}
 
         response = requests.post(
@@ -42,6 +44,7 @@ def api(texts: List[str]) -> str:
                 },
             },
         )
+        print(response)
 
         return [resp["generated_text"] for resp in response.json()]
     except Exception as e:
