@@ -1,5 +1,6 @@
 import os
 import requests
+import streamlit as st
 
 from collections import OrderedDict
 from typing import List
@@ -11,7 +12,7 @@ load_dotenv()
 
 MODEL = "deep-learning-analytics/automatic-title-generation"
 API_URL = "https://api-inference.huggingface.co/models/deep-learning-analytics/automatic-title-generation"
-API_KEY = os.getenv("HUGGINGFACE_API_KEY")
+API_KEY = os.getenv("HUGGINGFACE_API_KEY") or st.secrets["HUGGINGFACE_API_KEY"]
 
 tokenizer = AutoTokenizer.from_pretrained(MODEL)
 
