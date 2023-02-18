@@ -23,6 +23,8 @@ from transformers import (
 from flair.data import Sentence
 from flair.models import TextClassifier
 
+from app.labelling.extract_cluster_labels import main as extract_cluster_labels
+
 
 stqdm.pandas()
 
@@ -35,7 +37,7 @@ sentiment_model = f"cardiffnlp/twitter-roberta-base-sentiment-latest"
 classifier = TextClassifier.load("en-sentiment")
 
 
-@st.cache
+@st.cache_data
 def get_num_cpu_cores():
     """Get the number of CPU cores."""
     return multiprocessing.cpu_count()
@@ -75,7 +77,9 @@ def _remove_numbers(text):
 
 def _remove_punctuation(text):
     """Remove punctuation"""
-    result = "".join(u for u in text if u not in ("?", ".", ";", ":", "!", '"', ","))
+    result = "".join(
+        u for u in text if u not in ("?", ".", ";", ":", "!", '"', ",", "-")
+    )
     return result
 
 
@@ -85,166 +89,44 @@ def _remove_whitespace(text):
     return result
 
 
-def _remove_stopwords(text):
-    """Remove stopwords"""
-    result = [word.lower() for word in text.split() if word.lower() not in sw]
-    return " ".join(result)
+def _apply_preprocessing_text(text):
+    """Apply preprocessing to a text"""
 
+    text = _remove_hyperlinks(text)
+    text = _remove_numbers(text)
+    text = _remove_punctuation(text)
+    text = _remove_whitespace(text)
 
-def _stem_words(text):
-    """Stem words"""
-    ss = SnowballStemmer("english")
-    word_tok = nltk.word_tokenize(text)
-    stemmed_words = [ss.stem(word) for word in word_tok]
-    return " ".join(stemmed_words)
-
-
-def _apply_preprocessing(df, column, new_column):
-    """Apply preprocessing to a dataframe"""
-
-    df[new_column] = df[column].apply(_remove_hyperlinks)
-    df[new_column] = df[column].apply(_remove_numbers)
-    df[new_column] = df[column].apply(_remove_punctuation)
-    df[new_column] = df[column].apply(_remove_whitespace)
-    df[new_column] = df[column].apply(_remove_stopwords)
-    df[new_column] = df[column].apply(_stem_words)
-
-    return df
-
-
-def _compute_IDF(documents):
-    """
-    Compute the IDF for each word in the corpus.
-    """
-
-    res = []
-
-    for doc in documents:
-        doc = nlp(doc)
-        temp_sentence = ""
-        for token in doc:
-            if token.pos_ in ["VERB", "NOUN", "ADJ"] or (token.dep_ == "dobj"):
-                temp_sentence += token.lemma_.lower() + " "
-        res.append(temp_sentence)
-
-    count = Counter()
-    for doc in res:
-        count.update(set(doc.split()))
-
-    total = np.sum(list(count.values()))
-    idf = {word: round(np.log2(total / ct)) for word, ct in count.items()}
-    return idf
-
-
-def _get_suggested_titles(documents):
-    """
-    Get suggested titles for each cluster.
-    """
-    cluster_df = pd.DataFrame(documents, columns=["Text"])
-    cluster_df = _apply_preprocessing(cluster_df, "Text", "Cleaned")
-
-    idf = _compute_IDF(cluster_df["Cleaned"])
-    label = _extract_cluster_label(cluster_df["Cleaned"], idf)
-
-    return label
-
-
-def _most_common(documents, n_words, idf):
-    """
-    Get the most common words in the corpus.
-    """
-    doc_count = Counter(documents)
-    for w in list(doc_count):
-        if doc_count[w] == 1:
-            pass
-        else:
-            doc_count[w] = doc_count[w] * idf.get(w, 1)
-
-    return doc_count.most_common(n_words)
-
-
-def _extract_cluster_label(clustered_docs, idf):
-    """
-    Extract a label for the cluster based on most common verbs, objects, and nouns.
-    """
-    nlp = spacy.load("en_core_web_sm")
-
-    verbs = []
-    objects = []
-    nouns = []
-    adjectives = []
-
-    for doc in nlp.pipe(clustered_docs):
-        for tok in doc:
-            if tok.is_stop or not str(tok).strip():
-                continue
-            if tok.dep_ == "VERB":
-                verbs.append(tok.lemma_.lower())
-            elif tok.dep_ == "dobj":
-                objects.append(tok.lemma_.lower())
-            elif tok.pos_ == "NOUN":
-                nouns.append(tok.lemma_.lower())
-            elif tok.pos_ == "ADJ":
-                adjectives.append(tok.lemma_.lower())
-
-    #  Get most common verbs, objects, nouns, and adjectives
-    if verbs:
-        verb = _most_common(verbs, 1, idf)[0][0]
-    else:
-        verb = ""
-
-    if objects:
-        obj = _most_common(objects, 1, idf)[0][0]
-    else:
-        obj = ""
-
-    if nouns:
-        noun = _most_common(nouns, 1, idf)[0][0]
-    else:
-        noun = ""
-
-    if len(set(nouns)) > 1:
-        noun2 = _most_common(nouns, 2, idf)[1][0]
-
-    if adjectives:
-        adj = _most_common(adjectives, 1, idf)[0][0]
-    else:
-        adj = ""
-
-    # concatenate the most common verb-object-noun1
-    label_words = [verb, obj]
-
-    for word in [noun, noun2]:
-        if word not in label_words:
-            label_words.append(word)
-
-    if "" in label_words:
-        label_words.remove("")
-
-    label = "_".join(label_words)
-
-    return label
+    return text
 
 
 def extract_labels(model):
     """
     Extract a label for the cluster based on most common verbs, objects, and nouns.
     """
-
     num_topics = model.get_num_topics()
     num_docs = model.get_topic_sizes()[0]
 
     labels = []
 
-    for i in range(num_topics):
-        topic_docs = model.search_documents_by_topic(i, num_docs=num_docs[i])[0]
-        label = _get_suggested_titles(topic_docs)
+    for i in stqdm(range(num_topics)):
+        topic_docs, _, _ = model.search_documents_by_topic(
+            i, num_docs=min(num_docs[i], 10)
+        )
+        topic_docs = list(set([t.lower().strip() for t in topic_docs]))
+        if len(topic_docs) == 1:
+            labels.append(topic_docs[0])
+            continue
+
+        top_sentences_concat = " ".join(topic_docs)
+        top_sentences_concat = _apply_preprocessing_text(top_sentences_concat)
+        label = extract_cluster_labels(top_sentences_concat)
         labels.append(label)
 
-    return labels
+    return [l.title() for l in labels]
 
 
-@st.cache
+@st.cache_data
 def _export_df_to_excel(df: pd.DataFrame):
     """
     Export a dataframe to an excel file.
