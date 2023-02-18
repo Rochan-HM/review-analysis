@@ -2,6 +2,7 @@ import multiprocessing
 import spacy
 import re
 import nltk
+import string
 
 import pandas as pd
 import numpy as np
@@ -83,9 +84,8 @@ def _remove_numbers(text):
 
 def _remove_punctuation(text):
     """Remove punctuation"""
-    result = "".join(
-        u for u in text if u not in ("?", ".", ";", ":", "!", '"', ",", "-")
-    )
+    result = str.maketrans(dict.fromkeys(string.punctuation))
+    result = text.translate(result)
     return result
 
 
