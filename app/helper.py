@@ -23,7 +23,13 @@ from transformers import (
 from flair.data import Sentence
 from flair.models import TextClassifier
 
-from labelling.extract_cluster_labels import api as extract_cluster_labels
+
+USE_API = True
+
+if USE_API:
+    from labelling.extract_cluster_labels import api as extract_cluster_labels
+else:
+    from labelling.extract_cluster_labels import main as extract_cluster_labels
 
 
 stqdm.pandas()
