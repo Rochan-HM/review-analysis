@@ -2,6 +2,7 @@ import multiprocessing
 import spacy
 import re
 import nltk
+import random
 import string
 
 import pandas as pd
@@ -10,13 +11,11 @@ import streamlit as st
 
 from io import BytesIO
 from stqdm import stqdm
-from collections import Counter
 from nltk.corpus import stopwords
-from nltk.stem import SnowballStemmer
 from scipy.special import softmax
+from transformers import set_seed as set_transformers_seed
 from transformers import (
     AutoModelForSequenceClassification,
-    TFAutoModelForSequenceClassification,
     AutoTokenizer,
     pipeline,
     AutoConfig,
@@ -48,6 +47,13 @@ classifier = TextClassifier.load("en-sentiment")
 def get_num_cpu_cores():
     """Get the number of CPU cores."""
     return multiprocessing.cpu_count()
+
+
+def set_random_state(seed: int) -> None:
+    """Set the random state for reproducibility."""
+    np.random.seed(seed)
+    random.seed(seed)
+    set_transformers_seed(seed)
 
 
 def read_data_csv(path):

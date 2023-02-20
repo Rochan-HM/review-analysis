@@ -6,7 +6,26 @@ from typing import Tuple
 from helper import *
 
 
+rand = random.randint(0, 1000)
+
+
 def main() -> Tuple[pd.DataFrame, str]:
+    # First, ask user to set a random seed
+    st.markdown("## Random Seed")
+    st.markdown("Please set a random seed to ensure reproducibility")
+
+    random_seed = st.number_input(
+        "Random Seed",
+        value=rand,
+        min_value=0,
+        max_value=1000,
+        step=1,
+    )
+    st.markdown(f"Your random seed is {random_seed}")
+
+    st.session_state.random_seed = random_seed
+    set_random_state(st.session_state.random_seed)
+
     # Step 1: Ask user to upload a CSV file
     st.markdown("## Step 1: Upload a CSV file")
     uploaded_file = st.file_uploader("Choose a CSV file", type="csv")
