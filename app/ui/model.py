@@ -32,10 +32,8 @@ def main() -> Tuple[str, str]:
     embedding_options = [
         "all-MiniLM-L6-v2",
         "doc2vec",
-        # "universal-sentence-encoder",
-        # "universal-sentence-encoder-large",
-        # "universal-sentence-encoder-multilingual",
-        # "universal-sentence-encoder-multilingual-large",
+        "universal-sentence-encoder",
+        "universal-sentence-encoder-large",
         "distiluse-base-multilingual-cased",
         "paraphrase-multilingual-MiniLM-L12-v2",
     ]

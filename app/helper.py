@@ -25,7 +25,7 @@ from flair.data import Sentence
 from flair.models import TextClassifier
 
 
-USE_API = True
+USE_API = False
 
 if USE_API:
     from labelling.extract_cluster_labels import api as extract_cluster_labels

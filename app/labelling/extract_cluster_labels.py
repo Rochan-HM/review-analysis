@@ -11,8 +11,6 @@ from dotenv import load_dotenv
 load_dotenv()
 
 MODEL = "deep-learning-analytics/automatic-title-generation"
-API_URL = "https://api-inference.huggingface.co/models/deep-learning-analytics/automatic-title-generation"
-API_KEY = os.getenv("HUGGINGFACE_API_KEY") or st.secrets["HUGGINGFACE_API_KEY"]
 
 tokenizer = AutoTokenizer.from_pretrained(MODEL)
 
@@ -42,6 +40,9 @@ def main(texts: List[str]) -> List[str]:
 
 
 def api(texts: List[str]) -> List[str]:
+    API_URL = "https://api-inference.huggingface.co/models/deep-learning-analytics/automatic-title-generation"
+    API_KEY = os.getenv("HUGGINGFACE_API_KEY") or st.secrets["HUGGINGFACE_API_KEY"]
+
     try:
         print("Using API")
         headers = {"Authorization": f"Bearer {API_KEY}"}
