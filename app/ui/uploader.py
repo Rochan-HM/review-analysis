@@ -9,7 +9,7 @@ from helper import *
 rand = random.randint(0, 1000)
 
 
-def main() -> Tuple[pd.DataFrame, str]:
+def main() -> Tuple[pd.DataFrame, str, int]:
     # First, ask user to set a random seed
     st.markdown("## Random Seed")
     st.markdown("Please set a random seed to ensure reproducibility")
@@ -57,4 +57,4 @@ def main() -> Tuple[pd.DataFrame, str]:
         st.error("Please select a string column")
         st.stop()
 
-    return df, selected_column
+    return df, selected_column, random_seed

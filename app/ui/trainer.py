@@ -16,6 +16,7 @@ def main(
     selected_column: str,
     selected_embedding: str,
     selected_speed: str,
+    seed: int = 42,
 ) -> Tuple[Top2Vec, pd.DataFrame]:
     # Step 4: Ask user to click a button to start training the model
     st.markdown("## Step 4: Train the model")
@@ -54,12 +55,14 @@ def main(
                     speed=selected_speed,
                     workers=get_num_cpu_cores(),
                     embedding_model=selected_embedding,
+                    umap_args={"random_state": seed},
                 )
             else:
                 model = Top2Vec(
                     documents=df[selected_column].tolist(),
                     workers=get_num_cpu_cores(),
                     embedding_model=selected_embedding,
+                    umap_args={"random_state": seed},
                 )
 
         num_topics = model.get_num_topics()

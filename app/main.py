@@ -17,13 +17,15 @@ from ui.analyzer import main as analyzer
 header()
 
 # Get the dataframe and validate it
-df, selected_column = uploader()
+df, selected_column, random_seed = uploader()
 
 # Get the embedding model and the model learning speed
 embedding_model, model_training_speed = embedding_model()
 
 # Train the model
-model, df = trainer(df, selected_column, embedding_model, model_training_speed)
+model, df = trainer(
+    df, selected_column, embedding_model, model_training_speed, random_seed
+)
 
 # Show the model analysis
 analyzer(df, model, selected_column)

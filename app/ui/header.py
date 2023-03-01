@@ -6,8 +6,8 @@ from helper import *
 HEADER_HTML = """
 <div style="text-align: center;">
 <img src="https://aialoe.org/wp-content/uploads/2023/01/dark-text-no-tag-cener.jpg" alt="Logo" width="300">
-<h1>CARES</h1>
-<h2>Classroom Assessment Review and Evaluation System</h2>
+<h1>RISE</h1>
+<h2>Review Insights and Sentiment Analysis</h2>
 </div>
 """.strip()
 
