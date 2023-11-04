@@ -1,3 +1,7 @@
+from dotenv import load_dotenv
+
+load_dotenv()
+
 import streamlit as st
 
 # Set streamlit configs
@@ -7,11 +11,11 @@ st.set_option("deprecation.showPyplotGlobalUse", False)
 # Then import the helper functions
 
 from helper import *
+from ui.analyzer import main as analyzer
 from ui.header import main as header
-from ui.uploader import main as uploader
 from ui.model import main as embedding_model
 from ui.trainer import main as trainer
-from ui.analyzer import main as analyzer
+from ui.uploader import main as uploader
 
 # Show the header
 header()

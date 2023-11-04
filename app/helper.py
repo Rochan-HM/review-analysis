@@ -1,32 +1,33 @@
 import multiprocessing
-import spacy
-import re
-import nltk
 import random
+import re
 import string
-
-import pandas as pd
-import numpy as np
-import streamlit as st
-
 from io import BytesIO
-from stqdm import stqdm
+
+import nltk
+import numpy as np
+import pandas as pd
+import spacy
+import streamlit as st
+from flair.data import Sentence
+from flair.models import TextClassifier
 from nltk.corpus import stopwords
 from scipy.special import softmax
-from transformers import set_seed as set_transformers_seed
+from stqdm import stqdm
 from transformers import (
+    AutoConfig,
     AutoModelForSequenceClassification,
     AutoTokenizer,
     pipeline,
-    AutoConfig,
 )
-from flair.data import Sentence
-from flair.models import TextClassifier
+from transformers import set_seed as set_transformers_seed
 
-
+USE_V2 = True
 USE_API = False
 
-if USE_API:
+if USE_V2:
+    from labelling.extract_cluster_labels_v2 import main as extract_cluster_labels
+elif USE_API:
     from labelling.extract_cluster_labels import api as extract_cluster_labels
 else:
     from labelling.extract_cluster_labels import main as extract_cluster_labels
@@ -112,9 +113,33 @@ def _apply_preprocessing_text(text):
     return text
 
 
-def extract_labels(model):
+def extract_labels_old(model):
     """
     Extract a label for the cluster based on most common verbs, objects, and nouns.
+    """
+    num_topics = model.get_num_topics()
+    num_docs = model.get_topic_sizes()[0]
+
+    input_sentences = []
+
+    for i in stqdm(range(num_topics)):
+        topic_docs, _, _ = model.search_documents_by_topic(
+            i, num_docs=min(num_docs[i], 7)
+        )
+        topic_docs = list(set([t.lower().strip() for t in topic_docs]))
+
+        top_sentences_concat = " ".join(topic_docs)
+        top_sentences_concat = _apply_preprocessing_text(top_sentences_concat)
+        input_sentences.append(top_sentences_concat)
+
+    cluster_labels = extract_cluster_labels(input_sentences)
+
+    return cluster_labels
+
+
+def extract_labels(model):
+    """
+    Extract labels for the cluster using OpenAI
     """
     num_topics = model.get_num_topics()
     num_docs = model.get_topic_sizes()[0]
@@ -127,9 +152,8 @@ def extract_labels(model):
         )
         topic_docs = list(set([t.lower().strip() for t in topic_docs]))
 
-        top_sentences_concat = " ".join(topic_docs)
-        top_sentences_concat = _apply_preprocessing_text(top_sentences_concat)
-        input_sentences.append(top_sentences_concat)
+        top_sentences = topic_docs
+        input_sentences.append(top_sentences)
 
     cluster_labels = extract_cluster_labels(input_sentences)
 
@@ -202,9 +226,13 @@ def _predict_sentiment(text):
     """
     Get the sentiment of a text.
     """
-    sentence = Sentence(text)
-    classifier.predict(sentence)
-    return sentence.labels[0].value.title()
+    try:
+        sentence = Sentence(text)
+        classifier.predict(sentence)
+        return sentence.labels[0].value.title()
+    except Exception as e:
+        print(e)
+        return "Unknown"
 
 
 def get_sentiment_df(df, text_col):
