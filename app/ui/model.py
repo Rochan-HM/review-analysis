@@ -1,7 +1,6 @@
-import streamlit as st
-
 from typing import Tuple
 
+import streamlit as st
 from helper import *
 
 EMBEDDING_MODEL_MSG = """
@@ -30,6 +29,7 @@ def main() -> Tuple[str, str]:
         st.markdown(EMBEDDING_MODEL_MSG)
 
     embedding_options = [
+        "gte-large",
         "all-MiniLM-L6-v2",
         "doc2vec",
         "universal-sentence-encoder",

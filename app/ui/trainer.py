@@ -1,12 +1,11 @@
-import streamlit as st
+from typing import List, Tuple
+
 import pandas as pd
-
-from typing import Tuple
-
-from top2vec import Top2Vec
-from stqdm import stqdm
-
+import streamlit as st
 from helper import *
+from sentence_transformers import SentenceTransformer
+from stqdm import stqdm
+from top2vec import Top2Vec
 
 stqdm.pandas()
 
@@ -38,6 +37,9 @@ def main(
     if "df" not in st.session_state:
         st.session_state.df = None
 
+    if "emb_model" not in st.session_state:
+        st.session_state.emb_model = None
+
     if (
         btn
         and st.session_state.model is None
@@ -58,6 +60,21 @@ def main(
                     umap_args={"random_state": seed},
                 )
             else:
+
+                # Check if we have custom embed model not supported by top2vec
+                if selected_embedding in ["gte-large"]:
+                    if st.session_state.emb_model is None:
+                        if selected_embedding == "gte-large":
+                            st.session_state.emb_model = SentenceTransformer(
+                                "thenlper/gte-large"
+                            )
+                        # Can add more models here later
+
+                    # Convert the selected embedding model to a callable
+                    selected_embedding = (
+                        lambda sentences: st.session_state.emb_model.encode(sentences)
+                    )
+
                 model = Top2Vec(
                     documents=df[selected_column].tolist(),
                     workers=get_num_cpu_cores(),

@@ -7,7 +7,7 @@ from langchain.output_parsers import OutputFixingParser, PydanticOutputParser
 from langchain.prompts import ChatPromptTemplate
 from models.cluster_label import ClusterLabel
 
-model = ChatOpenAI(model="gpt-3.5-turbo-1106", temperature=0)
+model = ChatOpenAI(model="gpt-3.5-turbo", temperature=0)
 pydantic_parser = PydanticOutputParser(pydantic_object=ClusterLabel)
 output_parser = OutputFixingParser.from_llm(parser=pydantic_parser, llm=model)
 

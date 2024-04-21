@@ -8,9 +8,13 @@ streamlit
 plotly-express
 flair
 stqdm
-top2vec
+torch
+sentence_transformers
+top2vec==1.0.32
 top2vec[sentence_transformers]
-top2vec[sentence_encoders]
 top2vec[indexing]
 spacy>=3.0.0,<4.0.0
+scipy==1.12
+openai
+langchain
 https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.5.0/en_core_web_sm-3.5.0.tar.gz#egg=en_core_web_sm
